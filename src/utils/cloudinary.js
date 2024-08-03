@@ -1,6 +1,7 @@
 import { v2 } from "cloudinary";
 import { response } from "express";
 import fs from "fs";
+import cloudinary from "cloudinary";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -23,3 +24,5 @@ const uploadOnCloudinary = async (localFilePath) => {
         return null;
     }
 };
+
+export { uploadOnCloudinary };
