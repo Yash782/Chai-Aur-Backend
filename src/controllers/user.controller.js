@@ -240,4 +240,67 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 //Export
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = User.findById(req.user?.id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    const isOldPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isOldPasswordCorrect) {
+        throw new ApiError(401, "Incorrect old password");
+    }
+    if (newPassword !== confirmNewPassword) {
+        throw new ApiError(
+            400,
+            "New password and confirm password do not match"
+        );
+    }
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(200, req.user, "Current user fetched");
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body;
+    if (!fullName || !email) {
+        throw new ApiError(400, "Full Name and Email are required");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            fullName,
+            email,
+        },
+        {
+            new: true,
+        }
+    );
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Account details updated successfully")
+        );
+});
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+};
